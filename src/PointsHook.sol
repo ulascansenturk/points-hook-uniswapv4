@@ -20,35 +20,28 @@ contract PointsHook is BaseHook, ERC20 {
 
     uint256 public constant POINTS_FOR_REFERRAL = 500 * 10 ** 18;
 
-    constructor(
-        IPoolManager _manager,
-        string memory _name,
-        string memory _symbol
-    ) BaseHook(_manager) ERC20(_name, _symbol, 18) {}
+    constructor(IPoolManager _manager, string memory _name, string memory _symbol)
+        BaseHook(_manager)
+        ERC20(_name, _symbol, 18)
+    {}
 
-    function getHookPermissions()
-        public
-        pure
-        override
-        returns (Hooks.Permissions memory)
-    {
-        return
-            Hooks.Permissions({
-                beforeInitialize: false,
-                afterInitialize: false,
-                beforeAddLiquidity: false,
-                beforeRemoveLiquidity: false,
-                afterAddLiquidity: true,
-                afterRemoveLiquidity: false,
-                beforeSwap: false,
-                afterSwap: true,
-                beforeDonate: false,
-                afterDonate: false,
-                beforeSwapReturnDelta: false,
-                afterSwapReturnDelta: false,
-                afterAddLiquidityReturnDelta: false,
-                afterRemoveLiquidityReturnDelta: false
-            });
+    function getHookPermissions() public pure override returns (Hooks.Permissions memory) {
+        return Hooks.Permissions({
+            beforeInitialize: false,
+            afterInitialize: false,
+            beforeAddLiquidity: false,
+            beforeRemoveLiquidity: false,
+            afterAddLiquidity: true,
+            afterRemoveLiquidity: false,
+            beforeSwap: false,
+            afterSwap: true,
+            beforeDonate: false,
+            afterDonate: false,
+            beforeSwapReturnDelta: false,
+            afterSwapReturnDelta: false,
+            afterAddLiquidityReturnDelta: false,
+            afterRemoveLiquidityReturnDelta: false
+        });
     }
 
     function afterSwap(
@@ -73,9 +66,8 @@ contract PointsHook is BaseHook, ERC20 {
         //      this is an "exact output for input" swap
         //      amount of ETH they spent is equal to BalanceDelta.amount0()
 
-        uint256 ethSpendAmount = swapParams.amountSpecified < 0
-            ? uint256(-swapParams.amountSpecified)
-            : uint256(int256(-delta.amount0()));
+        uint256 ethSpendAmount =
+            swapParams.amountSpecified < 0 ? uint256(-swapParams.amountSpecified) : uint256(int256(-delta.amount0()));
         uint256 pointsForSwap = ethSpendAmount / 5;
 
         // Mint the points including any referral points
@@ -104,16 +96,10 @@ contract PointsHook is BaseHook, ERC20 {
         return (this.afterAddLiquidity.selector, delta);
     }
 
-    function _assignPoints(
-        bytes calldata hookData,
-        uint256 referreePoints
-    ) internal {
+    function _assignPoints(bytes calldata hookData, uint256 referreePoints) internal {
         if (hookData.length == 0) return;
 
-        (address referrer, address referree) = abi.decode(
-            hookData,
-            (address, address)
-        );
+        (address referrer, address referree) = abi.decode(hookData, (address, address));
         if (referree == address(0)) return;
 
         if (referredBy[referree] == address(0) && referrer != address(0)) {
@@ -129,10 +115,7 @@ contract PointsHook is BaseHook, ERC20 {
         _mint(referree, referreePoints);
     }
 
-    function getHookData(
-        address referrer,
-        address referree
-    ) public pure returns (bytes memory) {
+    function getHookData(address referrer, address referree) public pure returns (bytes memory) {
         return abi.encode(referrer, referree);
     }
 }
